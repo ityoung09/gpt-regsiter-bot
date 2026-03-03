@@ -1,0 +1,20 @@
+services:
+  gpt-register-bot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: gpt-register-bot
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      PYTHONUTF8: "1"
+      PYTHONUNBUFFERED: "1"
+    volumes:
+      - ./output:/app/output
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/state', timeout=3)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s

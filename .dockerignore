@@ -1,0 +1,11 @@
+.git
+.idea
+.venv
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+*.log
+output
+dist
+build

@@ -1,0 +1,73 @@
+﻿<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GPT Register Bot Console</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/style.css" />
+</head>
+<body>
+  <div class="bg-orb bg-orb-a"></div>
+  <div class="bg-orb bg-orb-b"></div>
+
+  <main class="shell">
+    <header class="hero card">
+      <div>
+        <p class="eyebrow">Automation Control Surface</p>
+        <h1>GPT Register Bot</h1>
+        <p class="sub">一个可视化控制台：配置执行次数、启动/停止任务、实时观察日志。</p>
+      </div>
+      <div id="statusBadge" class="badge idle">
+        <span class="dot"></span>
+        <span id="statusText">Idle</span>
+      </div>
+    </header>
+
+    <section class="layout">
+      <article class="card panel panel-form">
+        <h2>Run Config</h2>
+
+        <label class="field">
+          <span>总执行次数</span>
+          <input id="totalRuns" type="number" min="1" value="1" />
+        </label>
+
+        <label class="field">
+          <span>CPA URL</span>
+          <input id="cpaUrl" type="text" placeholder="http://host:port/v0/management/auth-files" />
+        </label>
+
+        <label class="field">
+          <span>CPA Token</span>
+          <input id="cpaToken" type="password" placeholder="Bearer token" />
+        </label>
+
+        <div class="button-row">
+          <button id="startBtn" class="btn btn-primary">启动任务</button>
+          <button id="stopBtn" class="btn btn-danger">停止任务</button>
+          <button id="clearBtn" class="btn btn-ghost">清空日志</button>
+        </div>
+
+        <p id="message" class="message"></p>
+      </article>
+
+      <article class="card panel panel-log">
+        <div class="panel-head">
+          <h2>Live Runtime</h2>
+          <div class="meta-grid">
+            <div><span>PID</span><strong id="pid">-</strong></div>
+            <div><span>Uptime</span><strong id="uptime">0s</strong></div>
+            <div><span>Command</span><strong id="command">-</strong></div>
+          </div>
+        </div>
+        <pre id="logs" class="log-view"></pre>
+      </article>
+    </section>
+  </main>
+
+  <script src="/assets/app.js"></script>
+</body>
+</html>
