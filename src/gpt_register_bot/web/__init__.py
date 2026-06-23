@@ -1,1 +1,0 @@
-﻿"""Web console package."""

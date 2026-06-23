@@ -1,70 +1,102 @@
 ﻿# gpt-register-bot
 
-一个只保留 **Web 页面逻辑** 的 FastAPI 项目，采用 `src` 标准布局与分层设计。
+企业级分层结构的 FastAPI Web 控制台，用于管理 OpenAI 账号注册任务。
 
-## 目录结构
+## 目录结构（分层架构）
 
 ```text
 gpt-register-bot/
-├─ src/
-│  └─ gpt_register_bot/
-│     └─ web/
-│        ├─ api.py                  # API 路由层
-│        ├─ config.py               # 配置层
-│        ├─ schemas.py              # 数据模型层
-│        ├─ main.py                 # 应用装配层
-│        ├─ services/
-│        │  ├─ log_buffer.py        # 日志缓存服务
-│        │  └─ process_manager.py   # 运行状态服务
-│        └─ ui/
-│           ├─ templates/index.html # 页面模板
-│           └─ static/
-│              ├─ style.css         # 样式
-│              └─ app.js            # 前端交互
-├─ web_app.py                       # Web 入口兼容文件
-├─ pyproject.toml
-└─ README.md
+├─ src/gpt_register_bot/
+│  ├─ config/                      # 全局配置（pydantic-settings）
+│  │  └─ settings.py
+│  ├─ domain/                      # 领域层：纯模型 + 端口（无 I/O / 框架依赖）
+│  │  ├─ models.py                 # TempMailbox / OAuthStart / RegistrationResult
+│  │  └─ ports.py                  # HttpClient / MailProvider / TokenRepository 协议
+│  ├─ application/                 # 应用层：用例编排（只依赖 domain 端口）
+│  │  ├─ registration_service.py   # 注册主流程（拆分后的用例）
+│  │  ├─ run_executor.py           # 并发执行器
+│  │  ├─ job_manager.py            # 任务生命周期
+│  │  ├─ logging_buffer.py         # LogBuffer + LogBufferHandler
+│  │  └─ dto.py                    # 任务请求/状态 DTO
+│  ├─ infrastructure/              # 基础设施层：端口的具体适配器
+│  │  ├─ http_client.py            # CurlHttpClient（curl_cffi 指纹模拟）
+│  │  ├─ mail.py                   # MailTmProvider + Strategy 注册表
+│  │  ├─ oauth.py                  # OAuthClient（PKCE）
+│  │  ├─ cpa.py                    # CpaUploader
+│  │  └─ persistence.py            # FileTokenRepository
+│  ├─ interfaces/                  # 接口层：交付方式
+│  │  ├─ web/                      # FastAPI 控制台（api/main/schemas/dependencies/ui）
+│  │  └─ cli.py                    # CLI 入口
+│  └─ container.py                 # 组合根（依赖注入装配）
+├─ tests/                          # 单元 / mock 集成测试
+├─ web_app.py                      # Web 入口（Docker / uvicorn）
+└─ pyproject.toml
 ```
 
-## 分层说明（SRP）
+## 分层职责
 
-- `api.py`：只处理 HTTP 请求和状态码映射。
-- `schemas.py`：只定义请求/响应模型。
-- `process_manager.py`：只管理运行状态与任务生命周期。
-- `log_buffer.py`：只负责线程安全日志存储。
-- `main.py`：只负责组装 FastAPI app（路由 + 静态资源）。
-- `ui/*`：只负责页面展示与前端交互。
+| 层 | 职责 | 依赖方向 |
+|---|---|---|
+| `domain/` | 纯模型与端口（接口），无任何 I/O | 不依赖任何层 |
+| `application/` | 用例编排、并发控制、任务生命周期 | 仅依赖 `domain` |
+| `infrastructure/` | 端口的具体实现（HTTP、邮箱、OAuth、持久化、日志） | 依赖 `domain` |
+| `interfaces/` | Web / CLI 交付适配 | 依赖 `application` |
+| `container.py` | 组合根：将适配器装配进应用服务 | 连接各层 |
+| `config/` | 环境变量与默认值集中管理 | 被各层引用 |
 
-## 安装依赖
+> 采用的设计模式：**依赖倒置/端口适配器**（domain 定义协议，infrastructure 实现）、
+> **Strategy + Registry**（`infrastructure/mail.py` 可插拔邮箱提供商）、
+> **依赖注入**（`container.py` 组合根，无全局单例耦合）、
+> **Repository**（`TokenRepository` 抽象输出落盘）。
+
+## 安装
 
 ```bash
 uv sync
+uv sync --extra dev   # 含测试依赖
 ```
 
-## 启动项目
+## 启动
 
 ```bash
+# Web 控制台
 uv run uvicorn web_app:app --host 0.0.0.0 --port 8000
+
+# 或使用项目脚本
+uv run gpt-register-web
+
+# CLI 模式（三线程循环注册）
+uv run gpt-register-cli --proxy http://127.0.0.1:7890
 ```
 
-浏览器访问：
+浏览器访问 [http://127.0.0.1:8000](http://127.0.0.1:8000)
 
-```text
-http://127.0.0.1:8000
-```
+## 环境变量
 
-## 项目脚本
+| 变量 | 默认值 | 说明 |
+|---|---|---|
+| `GPT_REGISTER_HOST` | `0.0.0.0` | Web 绑定地址 |
+| `GPT_REGISTER_PORT` | `8000` | Web 端口 |
+| `GPT_REGISTER_OUTPUT_DIR` | `./output` | 输出目录 |
+| `GPT_REGISTER_DEFAULT_CONCURRENCY` | `3` | 默认并发数 |
+
+## Docker
 
 ```bash
-uv run gpt-register-web
+docker compose up -d --build
 ```
 
-## 当前行为说明
+## 测试
 
-当前 Web 后端会在服务层内直接调用 `source.py` 的核心逻辑（不再通过子进程），并通过 FastAPI 控制任务生命周期：
+```bash
+uv run pytest
+```
 
-- `total_runs`：本次总生成次数
-- `concurrency`：并发线程数（默认 `3`，前端不传时使用默认值）
-- `cpa_url` + `cpa_token`：可选 CPA 上传配置（需同时提供）
+## API 参数
 
-日志会被统一写入内存日志缓冲，接口实时返回，中文日志在 Web 端按 UTF-8 显示，避免乱码。
+- `total_runs`：总执行次数
+- `concurrency`：并发线程数（默认 3）
+- `proxy`：HTTP 代理（可选）
+- `cpa_url` + `cpa_token`：CPA 上传（需同时提供）
+
+输出文件写入 `output/token_*.json` 与 `output/accounts.txt`。

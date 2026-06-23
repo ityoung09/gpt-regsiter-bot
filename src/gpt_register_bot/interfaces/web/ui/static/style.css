@@ -173,7 +173,8 @@ h1 {
 
 input[type="text"],
 input[type="number"],
-input[type="password"] {
+input[type="password"],
+select {
   border: 1px solid var(--line);
   background: rgba(255, 255, 255, 0.92);
   border-radius: var(--radius-md);
@@ -185,7 +186,8 @@ input[type="password"] {
   transition: border-color .2s ease, box-shadow .2s ease;
 }
 
-input:focus {
+input:focus,
+select:focus {
   border-color: rgba(13, 139, 122, .66);
   box-shadow: 0 0 0 4px rgba(13, 139, 122, .18);
 }
@@ -223,6 +225,22 @@ input:focus {
   transform: translateY(0);
 }
 
+.btn:disabled {
+  opacity: .42;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.btn-mini {
+  padding: 5px 11px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #2b3b52;
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid var(--line);
+}
+
 .btn-primary {
   color: var(--primary-ink);
   background: linear-gradient(140deg, #0b8f7e, #0c7466);
@@ -244,11 +262,26 @@ input:focus {
   min-height: 22px;
   margin: 12px 2px 0;
   font-size: 13px;
-  color: #425468;
+  color: #234363;
+}
+
+.message.is-error {
+  color: #b4232f;
 }
 
 .panel-head {
   margin-bottom: 8px;
+}
+
+.panel-head-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.panel-head-row h2 {
+  margin: 0;
 }
 
 .meta-grid {
@@ -290,8 +323,40 @@ input:focus {
   font-family: "IBM Plex Mono", Consolas, monospace;
   font-size: 12px;
   line-height: 1.48;
+}
+
+.log-line {
   white-space: pre-wrap;
   word-break: break-word;
+  padding: 1px 4px;
+  border-radius: 4px;
+}
+
+.log-line.log-info {
+  color: #cdd9ee;
+}
+
+.log-line.log-task {
+  color: #7fd9c6;
+}
+
+.log-line.log-system {
+  color: #8595ad;
+}
+
+.log-line.log-warn {
+  color: #f4c361;
+  background: rgba(244, 195, 97, .08);
+}
+
+.log-line.log-error {
+  color: #ff8a8a;
+  background: rgba(255, 138, 138, .1);
+}
+
+.log-view:empty::before {
+  content: "暂无日志";
+  color: #5a6b85;
 }
 
 @keyframes fadeUp {

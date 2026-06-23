@@ -7,13 +7,9 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
-# Install Python dependencies from project metadata.
-COPY pyproject.toml README.md /app/
+COPY pyproject.toml README.md web_app.py /app/
 COPY src /app/src
 RUN pip install --upgrade pip && pip install .
-
-# Runtime files needed by web entry and source runtime.
-COPY web_app.py source.py /app/
 
 RUN mkdir -p /app/output
 

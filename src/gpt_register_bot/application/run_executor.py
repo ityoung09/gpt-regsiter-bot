@@ -1,15 +1,20 @@
 from __future__ import annotations
 
+import logging
 from concurrent.futures import Future, ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
 from threading import Event
 from typing import Callable
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
 class RunPlan:
     total_runs: int
     concurrency: int
+    provider_key: str = "mailtm"
+    proxy: str | None = None
     cpa_url: str | None = None
     cpa_token: str | None = None
 
@@ -24,17 +29,12 @@ class RunSummary:
 class RunExecutor:
     """Concurrent executor for account generation runs."""
 
-    def __init__(
-        self,
-        run_once: Callable[..., bool],
-        log: Callable[[str], None],
-    ) -> None:
+    def __init__(self, run_once: Callable[..., bool]) -> None:
         self._run_once = run_once
-        self._log = log
 
     def execute(self, plan: RunPlan, stop_event: Event) -> RunSummary:
         workers = max(1, min(plan.total_runs, plan.concurrency))
-        self._log(f"[task] thread pool workers: {workers}")
+        logger.info("[task] thread pool workers: %s", workers)
 
         succeeded = 0
         failed = 0
@@ -50,6 +50,8 @@ class RunExecutor:
                     thread_id=run_no,
                     run_no=run_no,
                     total_runs=plan.total_runs,
+                    proxy=plan.proxy,
+                    provider_key=plan.provider_key,
                     cpa_url=plan.cpa_url,
                     cpa_token=plan.cpa_token,
                     stop_event=stop_event,
@@ -61,14 +63,16 @@ class RunExecutor:
 
                 if future.cancelled():
                     skipped += 1
-                    self._log(f"[task] run {run_no}/{plan.total_runs} cancelled")
+                    logger.info("[task] run %s/%s cancelled", run_no, plan.total_runs)
                     continue
 
                 try:
                     ok = future.result()
                 except Exception as exc:  # pragma: no cover - defensive
                     failed += 1
-                    self._log(f"[error] run {run_no}/{plan.total_runs} future crashed: {exc}")
+                    logger.error(
+                        "run %s/%s future crashed: %s", run_no, plan.total_runs, exc
+                    )
                     continue
 
                 if ok:
@@ -78,8 +82,4 @@ class RunExecutor:
                 else:
                     failed += 1
 
-        return RunSummary(
-            succeeded=succeeded,
-            failed=failed,
-            skipped=skipped,
-        )
+        return RunSummary(succeeded=succeeded, failed=failed, skipped=skipped)

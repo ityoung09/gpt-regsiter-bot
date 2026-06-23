@@ -1,17 +1,25 @@
 [project]
 name = "gpt-register-bot"
-version = "0.1.0"
-description = "Layered FastAPI web console application."
+version = "0.2.0"
+description = "Layered FastAPI web console for OpenAI account registration."
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "curl-cffi",
     "fastapi",
+    "pydantic-settings",
     "uvicorn",
 ]
 
 [project.scripts]
-gpt-register-web = "gpt_register_bot.web.main:run"
+gpt-register-web = "gpt_register_bot.interfaces.web.main:run"
+gpt-register-cli = "gpt_register_bot.interfaces.cli:main"
+
+[project.optional-dependencies]
+dev = [
+    "httpx",
+    "pytest",
+]
 
 [build-system]
 requires = ["hatchling"]
@@ -21,8 +29,8 @@ build-backend = "hatchling.build"
 packages = ["src/gpt_register_bot"]
 
 [tool.hatch.build.targets.wheel.force-include]
-"src/gpt_register_bot/web/ui/templates" = "gpt_register_bot/web/ui/templates"
-"src/gpt_register_bot/web/ui/static" = "gpt_register_bot/web/ui/static"
+"src/gpt_register_bot/interfaces/web/ui/templates" = "gpt_register_bot/interfaces/web/ui/templates"
+"src/gpt_register_bot/interfaces/web/ui/static" = "gpt_register_bot/interfaces/web/ui/static"
 
 [tool.hatch.build.targets.sdist]
 include = [
@@ -31,3 +39,7 @@ include = [
     "pyproject.toml",
     "web_app.py",
 ]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]

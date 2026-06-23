@@ -36,6 +36,23 @@
         </label>
 
         <label class="field">
+          <span>并发线程数</span>
+          <input id="concurrency" type="number" min="1" max="32" value="3" />
+        </label>
+
+        <label class="field">
+          <span>临时邮箱提供商</span>
+          <select id="provider">
+            <option value="mailtm">Mail.tm</option>
+          </select>
+        </label>
+
+        <label class="field">
+          <span>代理地址（可选）</span>
+          <input id="proxy" type="text" placeholder="http://127.0.0.1:7890" />
+        </label>
+
+        <label class="field">
           <span>CPA URL</span>
           <input id="cpaUrl" type="text" placeholder="http://host:port/v0/management/auth-files" />
         </label>
@@ -56,14 +73,17 @@
 
       <article class="card panel panel-log">
         <div class="panel-head">
-          <h2>Live Runtime</h2>
+          <div class="panel-head-row">
+            <h2>Live Runtime</h2>
+            <button id="copyBtn" class="btn btn-mini" type="button">复制日志</button>
+          </div>
           <div class="meta-grid">
             <div><span>PID</span><strong id="pid">-</strong></div>
             <div><span>Uptime</span><strong id="uptime">0s</strong></div>
             <div><span>Command</span><strong id="command">-</strong></div>
           </div>
         </div>
-        <pre id="logs" class="log-view"></pre>
+        <div id="logs" class="log-view"></div>
       </article>
     </section>
   </main>
